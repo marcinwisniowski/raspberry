@@ -19,6 +19,7 @@ class KnightRaider(object):
     """
 
     SENSOR_COLOR = (255, 0, 0)
+    AMBIENT_COLOR = (64, 0, 0)
 
     def __init__(self, line=0):
         self._sensehat = SenseHat()
@@ -26,17 +27,23 @@ class KnightRaider(object):
         self._step = 1
 
     def run_scanner(self):
-        """ Main routine for LED scanner"""
-        x = 0
+        """ Main routine for LED scanner """
+        position = 0
         while True:
-            if x in range(0, 8):
-                sleep(0.05)
-                self._sensehat.clear()
-                self._sensehat.set_pixel(x, self.line, self.SENSOR_COLOR)
+            if position in range(0, 8):
+                self.set_ambient()
+                self._sensehat.set_pixel(position, self.line, self.SENSOR_COLOR)
             else:
                 sleep(0.1)
                 self._step = -self._step
-            x = x + self._step
+            sleep(0.05)
+            position = position + self._step
+
+    def set_ambient(self):
+        """ Manages the background of sensor """
+        self._sensehat.clear()
+        for x in range(0, 8):
+            self._sensehat.set_pixel(x, self.line, self.SENSOR_COLOR)
 
 
 if __name__ == '__main__':
