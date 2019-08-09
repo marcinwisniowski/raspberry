@@ -33,9 +33,10 @@ class KnightRaider(object):
         gleam_position = 0
         while True:
             if position in range(0, 8):
+                self.set_ambient()
                 self._sensehat.set_pixel(position, self.line, self.SENSOR_COLOR)
                 self._sensehat.set_pixel(gleam_position, self.line, self.GLEAM_COLOR)
-                tail_position = position
+                gleam_position = position
             else:
                 sleep(0.1)
                 self._step = -self._step
