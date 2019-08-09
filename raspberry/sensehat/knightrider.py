@@ -43,7 +43,7 @@ class KnightRaider(object):
         """ Manages the background of sensor """
         self._sensehat.clear()
         for x in range(0, 8):
-            self._sensehat.set_pixel(x, self.line, self.SENSOR_COLOR)
+            self._sensehat.set_pixel(x, self.line, self.AMBIENT_COLOR)
 
 
 if __name__ == '__main__':
