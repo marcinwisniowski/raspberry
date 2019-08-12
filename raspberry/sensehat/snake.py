@@ -10,6 +10,7 @@ Licensed under MIT License
 """
 
 from sense_hat import SenseHat
+from random import randint
 
 
 class Position(object):
@@ -65,6 +66,7 @@ class SnakeGame(object):
     def __init__(self):
         self._sensehat = SenseHat()
         self.__new_snake()
+        self.__new_apple()
 
     def __new_snake(self):
         """
@@ -72,11 +74,18 @@ class SnakeGame(object):
         """
         self._snake = self.Snake(Position(4, 2), Position(4, 3), Position(4, 4))
 
+    def __new_apple(self):
+        """
+        Setups apple at random position
+        """
+        self._apple = self.Apple(Position(randint(0, 7), randint(0, 7)))
+
     def run(self):
         """
 
         """
         self.draw_snake()
+        self.draw_apple()
 
     def draw_snake(self):
         """
@@ -84,6 +93,12 @@ class SnakeGame(object):
         """
         for pixel in self._snake.body:
             self._sensehat.set_pixel(pixel.x, pixel.y, self._snake.color)
+
+    def draw_apple(self):
+        """
+        Draws apple on a display
+        """
+        self._sensehat.set_pixel(self._apple.position.x, self._apple.position.y, self._apple.color)
 
     class Snake(object):
         """
@@ -101,6 +116,26 @@ class SnakeGame(object):
             Snakes color in RGB scale
             :return: tuple
             """
+            return self.COLOR
+
+    class Apple(object):
+        """
+        Apple
+        Defines where apple need to be shown
+        """
+        COLOR = (128, 0, 0)  # Red
+
+        def __init__(self, position):
+            if not isinstance(position, Position):
+                raise ValueError
+            self._position = position
+
+        @property
+        def position(self):
+            return self._position
+
+        @property
+        def color(self):
             return self.COLOR
 
 
