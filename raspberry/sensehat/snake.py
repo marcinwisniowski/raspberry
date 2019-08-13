@@ -11,6 +11,8 @@ Licensed under MIT License
 
 from sense_hat import SenseHat
 from random import randint
+from enum import Enum
+from time import sleep
 
 
 class Position(object):
@@ -48,6 +50,14 @@ class Position(object):
         """
         return self._position[1]
 
+    @property
+    def value(self) -> tuple:
+        """
+        Coordinates in tuple representation
+        :return: tuple
+        """
+        return self._position
+
 
 class PositionError(ValueError):
     """
@@ -59,20 +69,55 @@ class PositionError(ValueError):
         super().__init__(message)
 
 
+class Direction(Enum):
+    """
+    Defines direction on Sense HAT
+    """
+    UP = (0, -1)
+    DOWN = (0, 1)
+    LEFT = (-1, 0)
+    RIGHT = (1, 0)
+
+
 class SnakeGame(object):
     """
     Implementation of snake game logic
     """
     def __init__(self):
         self._sensehat = SenseHat()
+        self._snake = None
+        self._apple = None
+
+    def new(self):
+        """
+        Resets the environment
+        """
         self.__new_snake()
         self.__new_apple()
+
+    def draw(self):
+        """
+        Draws the board
+        """
+        self._sensehat.clear()
+        self._draw_snake()
+        self._draw_apple()
+
+    def run(self):
+        """
+        Runs the game loop
+        """
+        self.new()
+        for x in range(4):
+            self.draw()
+            sleep(1)
+            self._snake.move(Direction.RIGHT)
 
     def __new_snake(self):
         """
         Setups snake at initial state
         """
-        self._snake = self.Snake(Position(4, 2), Position(4, 3), Position(4, 4))
+        self._snake = self.Snake(Direction.RIGHT, Position(4, 4), Position(3, 4), Position(2, 4))
 
     def __new_apple(self):
         """
@@ -80,21 +125,14 @@ class SnakeGame(object):
         """
         self._apple = self.Apple(Position(randint(0, 7), randint(0, 7)))
 
-    def run(self):
-        """
-
-        """
-        self.draw_snake()
-        self.draw_apple()
-
-    def draw_snake(self):
+    def _draw_snake(self):
         """
         Draws snake on a display
         """
         for pixel in self._snake.body:
             self._sensehat.set_pixel(pixel.x, pixel.y, self._snake.color)
 
-    def draw_apple(self):
+    def _draw_apple(self):
         """
         Draws apple on a display
         """
@@ -106,9 +144,32 @@ class SnakeGame(object):
         """
         COLOR = (0, 128, 0)  # Green
 
-        def __init__(self, *args):
+        def __init__(self, direction: Direction, *args):
             self._alive = True
-            self.body = args
+            self.body: list = list(args)
+            self.direction = direction
+            self._head = self.body[0]
+
+        def move(self, direction: Direction):
+            """
+            moves the snake in a given direction
+            :param direction: Direction tuple
+            """
+            def opposite(dir1: Direction, dir2: Direction) -> bool:
+                if not isinstance(dir1, Direction) or not isinstance(dir2, Direction):
+                    raise ValueError("This method can compare only directions")
+                if dir1.value[0] == dir2.value[0] == 0 and dir1.value[1] == -dir2.value[1]:
+                    return True
+                elif dir1.value[0] == dir2.value[0] == 0 and dir1.value[1] == -dir2.value[1]:
+                    return True
+                else:
+                    return False
+
+            if not opposite(self.direction, direction):
+                new_head = Position(self._head.x + direction.value[0], self._head.y + direction.value[1])
+                self.body.insert(0, new_head)
+                self._head = new_head
+                return self.body.pop()
 
         @property
         def color(self):
