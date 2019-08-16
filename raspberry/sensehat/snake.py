@@ -12,8 +12,7 @@ Licensed under MIT License
 from sense_hat import SenseHat, InputEvent, ACTION_HELD, ACTION_PRESSED, ACTION_RELEASED, DIRECTION_MIDDLE
 from random import randint
 from enum import Enum
-from signal import pause
-from time import sleep
+from collections import deque
 
 
 class Position(object):
@@ -184,7 +183,7 @@ class SnakeGame(object):
             self.body: list = list(args)
             self.direction = direction
             self._head: Position = self.body[0]
-            self.__trace: list = list()
+            self.__trace: deque = deque(list(), 8)
 
         def move(self, direction: Direction):
             """
