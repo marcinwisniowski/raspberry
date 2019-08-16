@@ -9,7 +9,7 @@ Copyright 2019 Marcin Filip Wiśniowski
 Licensed under MIT License
 """
 
-from sense_hat import SenseHat, InputEvent, ACTION_HELD, ACTION_PRESSED, DIRECTION_MIDDLE
+from sense_hat import SenseHat, InputEvent, ACTION_HELD, ACTION_PRESSED, ACTION_RELEASED, DIRECTION_MIDDLE
 from random import randint
 from enum import Enum
 from signal import pause
@@ -89,6 +89,7 @@ class SnakeGame(object):
         self._snake = None
         self._apple = None
         self._sensehat.stick.direction_any = self.joystick_listener
+        self.__held_time = 0.0
 
     def new(self):
         """
@@ -113,7 +114,12 @@ class SnakeGame(object):
         if event.direction != DIRECTION_MIDDLE and event.action == ACTION_PRESSED:
             self._snake.move(Direction[event.direction.upper()])
         elif event.direction == DIRECTION_MIDDLE and event.action == ACTION_HELD:
-            self.new()
+            if self.__held_time == 0.0:
+                self.__held_time = event.timestamp
+        elif event.direction == DIRECTION_MIDDLE and event.action == ACTION_RELEASED:
+            if event.timestamp - self.__held_time >= 3.0:
+                self.__held_time = 0.0
+                self.new()
         self.draw()
 
     def run(self):
