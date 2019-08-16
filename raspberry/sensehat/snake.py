@@ -101,6 +101,9 @@ class SnakeGame(object):
         self._sensehat.stick.direction_any = self.joystick_listener
         self.__held_time = 0.0
 
+    def __del__(self):
+        self._sensehat.clear()
+
     def new(self):
         """
         Resets the environment
@@ -123,11 +126,13 @@ class SnakeGame(object):
         """
         if event.direction != DIRECTION_MIDDLE and event.action == ACTION_PRESSED:
             self._snake.move(Direction[event.direction.upper()])
+            if self._snake.eat(self._apple):
+                self.__new_apple()
         elif event.direction == DIRECTION_MIDDLE and event.action == ACTION_HELD:
             if self.__held_time == 0.0:
                 self.__held_time = event.timestamp
         elif event.direction == DIRECTION_MIDDLE and event.action == ACTION_RELEASED:
-            if event.timestamp - self.__held_time >= 3.0:
+            if event.timestamp - self.__held_time >= 3.0 and self.__held_time > 0.0:
                 self.__held_time = 0.0
                 self.new()
         self.draw()
@@ -178,7 +183,8 @@ class SnakeGame(object):
             self._alive = True
             self.body: list = list(args)
             self.direction = direction
-            self._head = self.body[0]
+            self._head: Position = self.body[0]
+            self.__trace: list = list()
 
         def move(self, direction: Direction):
             """
@@ -200,7 +206,27 @@ class SnakeGame(object):
                 self.body.insert(0, new_head)
                 self._head = new_head
                 self.direction = direction
-                return self.body.pop()
+                tail = self.body.pop()
+                self.__trace.append(tail)
+                return tail
+
+        def _grow(self):
+            """
+            Grow the snake
+            """
+            if len(self.__trace) > 0:
+                self.body.append(self.__trace.pop())
+
+        def eat(self, apple):
+            """
+
+            :param apple:
+            :return:
+            """
+            if apple.position == self._head:
+                self._grow()
+                return True
+            return False
 
         @property
         def color(self):
