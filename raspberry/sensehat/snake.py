@@ -110,11 +110,9 @@ class SnakeGame(object):
         Listens for Sense Hat joystick events as a main user input source
         :param event:
         """
-
         if event.direction != DIRECTION_MIDDLE and event.action == ACTION_PRESSED:
             self._snake.move(Direction[event.direction.upper()])
         elif event.direction == DIRECTION_MIDDLE and event.action == ACTION_HELD:
-            sleep(5.0)
             self.new()
         self.draw()
 
@@ -181,6 +179,7 @@ class SnakeGame(object):
                 new_head = Position(self._head.x + direction.value[0], self._head.y + direction.value[1])
                 self.body.insert(0, new_head)
                 self._head = new_head
+                self.direction = direction
                 return self.body.pop()
 
         @property
