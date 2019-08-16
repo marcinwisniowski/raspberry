@@ -13,6 +13,7 @@ from sense_hat import SenseHat, InputEvent, ACTION_HELD, ACTION_PRESSED, ACTION_
 from random import randint
 from enum import Enum
 from collections import deque
+from time import sleep
 
 
 class Position(object):
@@ -95,10 +96,12 @@ class SnakeGame(object):
     """
     def __init__(self):
         self._sensehat = SenseHat()
-        self._snake = None
-        self._apple = None
         self._sensehat.stick.direction_any = self.joystick_listener
         self.__held_time = 0.0
+        self.__score = 0
+        self._sensehat.show_message("Snake", 0.1, (0, 128, 0))
+        self.new()
+        self.draw()
 
     def __del__(self):
         self._sensehat.clear()
@@ -107,6 +110,9 @@ class SnakeGame(object):
         """
         Resets the environment
         """
+        self._sensehat.show_message(">===", 0.05, (0, 64, 0))
+        sleep(0.5)
+        self.__score = 0
         self.__new_snake()
         self.__new_apple()
 
@@ -124,24 +130,27 @@ class SnakeGame(object):
         :param event:
         """
         if event.direction != DIRECTION_MIDDLE and event.action == ACTION_PRESSED:
-            self._snake.move(Direction[event.direction.upper()])
-            if self._snake.eat(self._apple):
-                self.__new_apple()
+            if self._snake.move(Direction[event.direction.upper()]):
+                if self._snake.eat(self._apple):
+                    self.__score = self.__score + 1
+                    self.__new_apple()
+            else:
+                self.__game_over()
         elif event.direction == DIRECTION_MIDDLE and event.action == ACTION_HELD:
             if self.__held_time == 0.0:
                 self.__held_time = event.timestamp
         elif event.direction == DIRECTION_MIDDLE and event.action == ACTION_RELEASED:
-            if event.timestamp - self.__held_time >= 3.0 and self.__held_time > 0.0:
+            if event.timestamp - self.__held_time >= 2.0 and self.__held_time > 0.0:
                 self.__held_time = 0.0
                 self.new()
         self.draw()
 
-    def run(self):
-        """
-        Runs the game loop
-        """
+    def __game_over(self):
+        self._sensehat.clear()
+        self._sensehat.show_message("GAME OVER")
+        self._sensehat.show_message("Score: %d" % self.__score)
+        sleep(1.5)
         self.new()
-        self.draw()
 
     def __new_snake(self):
         """
@@ -163,14 +172,16 @@ class SnakeGame(object):
         """
         Draws snake on a display
         """
-        for pixel in self._snake.body:
-            self._sensehat.set_pixel(pixel.x, pixel.y, self._snake.color)
+        if self._snake is not None:
+            for pixel in self._snake.body:
+                self._sensehat.set_pixel(pixel.x, pixel.y, self._snake.color)
 
     def _draw_apple(self):
         """
         Draws apple on a display
         """
-        self._sensehat.set_pixel(self._apple.position.x, self._apple.position.y, self._apple.color)
+        if self._apple is not None:
+            self._sensehat.set_pixel(self._apple.position.x, self._apple.position.y, self._apple.color)
 
     class Snake(object):
         """
@@ -200,14 +211,17 @@ class SnakeGame(object):
                 else:
                     return False
 
-            if not opposite(self.direction, direction):
+            if self._alive and not opposite(self.direction, direction):
                 new_head = Position(self._head.x + direction.value[0], self._head.y + direction.value[1])
-                self.body.insert(0, new_head)
-                self._head = new_head
-                self.direction = direction
-                tail = self.body.pop()
-                self.__trace.append(tail)
-                return tail
+                if new_head not in self.body:
+                    self.body.insert(0, new_head)
+                    self._head = new_head
+                    self.direction = direction
+                    tail = self.body.pop()
+                    self.__trace.append(tail)
+                else:
+                    self._alive = False
+            return self._alive
 
         def _grow(self):
             """
@@ -258,4 +272,4 @@ class SnakeGame(object):
 
 if __name__ == '__main__':
     snake = SnakeGame()
-    snake.run()
+    #snake.run()
