@@ -9,9 +9,10 @@ Copyright 2019 Marcin Filip Wiśniowski
 Licensed under MIT License
 """
 
-from sense_hat import SenseHat
+from sense_hat import SenseHat, InputEvent, ACTION_HELD, ACTION_PRESSED, DIRECTION_MIDDLE
 from random import randint
 from enum import Enum
+from signal import pause
 from time import sleep
 
 
@@ -87,6 +88,7 @@ class SnakeGame(object):
         self._sensehat = SenseHat()
         self._snake = None
         self._apple = None
+        self._sensehat.stick.direction_any = self.joystick_listener
 
     def new(self):
         """
@@ -103,15 +105,25 @@ class SnakeGame(object):
         self._draw_snake()
         self._draw_apple()
 
+    def joystick_listener(self, event: InputEvent):
+        """
+        Listens for Sense Hat joystick events as a main user input source
+        :param event:
+        """
+
+        if event.direction != DIRECTION_MIDDLE and event.action == ACTION_PRESSED:
+            self._snake.move(Direction[event.direction.upper()])
+        elif event.direction == DIRECTION_MIDDLE and event.action == ACTION_HELD:
+            sleep(5.0)
+            self.new()
+        self.draw()
+
     def run(self):
         """
         Runs the game loop
         """
         self.new()
-        for x in range(4):
-            self.draw()
-            sleep(1)
-            self._snake.move(Direction.RIGHT)
+        self.draw()
 
     def __new_snake(self):
         """
@@ -160,7 +172,7 @@ class SnakeGame(object):
                     raise ValueError("This method can compare only directions")
                 if dir1.value[0] == dir2.value[0] == 0 and dir1.value[1] == -dir2.value[1]:
                     return True
-                elif dir1.value[0] == dir2.value[0] == 0 and dir1.value[1] == -dir2.value[1]:
+                elif dir1.value[1] == dir2.value[1] == 0 and dir1.value[0] == -dir2.value[0]:
                     return True
                 else:
                     return False
