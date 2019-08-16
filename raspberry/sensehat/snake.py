@@ -35,6 +35,16 @@ class Position(object):
         else:
             raise PositionError
 
+    def __eq__(self, other):
+        """ Override the default Equals behavior """
+        if isinstance(other, self.__class__):
+            return self.x == other.x and self.y == other.y
+        return False
+
+    def __ne__(self, other):
+        """ Override the default Unequal behavior """
+        return self.x != other.x or self.y != other.y
+
     @property
     def x(self):
         """
@@ -139,7 +149,11 @@ class SnakeGame(object):
         """
         Setups apple at random position
         """
-        self._apple = self.Apple(Position(randint(0, 7), randint(0, 7)))
+        apple_position = Position(randint(0, 7), randint(0, 7))
+        while apple_position in self._snake.body:
+            apple_position = Position(randint(0, 7), randint(0, 7))
+
+        self._apple = self.Apple(apple_position)
 
     def _draw_snake(self):
         """
