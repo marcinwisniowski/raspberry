@@ -130,12 +130,15 @@ class SnakeGame(object):
         :param event:
         """
         if event.direction != DIRECTION_MIDDLE and event.action == ACTION_PRESSED:
-            if self._snake.move(Direction[event.direction.upper()]):
+            try:
+                self._snake.move(Direction[event.direction.upper()])
+            except ValueError:
+                self.__game_over()
+            else:
                 if self._snake.eat(self._apple):
                     self.__score = self.__score + 1
                     self.__new_apple()
-            else:
-                self.__game_over()
+
         elif event.direction == DIRECTION_MIDDLE and event.action == ACTION_HELD:
             if self.__held_time == 0.0:
                 self.__held_time = event.timestamp
@@ -143,7 +146,10 @@ class SnakeGame(object):
             if event.timestamp - self.__held_time >= 2.0 and self.__held_time > 0.0:
                 self.__held_time = 0.0
                 self.new()
-        self.draw()
+        try:
+            self.draw()
+        except ValueError:
+            self.__game_over()
 
     def __game_over(self):
         self._sensehat.clear()
@@ -190,7 +196,6 @@ class SnakeGame(object):
         COLOR = (0, 128, 0)  # Green
 
         def __init__(self, direction: Direction, *args):
-            self._alive = True
             self.body: list = list(args)
             self.direction = direction
             self._head: Position = self.body[0]
@@ -211,7 +216,7 @@ class SnakeGame(object):
                 else:
                     return False
 
-            if self._alive and not opposite(self.direction, direction):
+            if not opposite(self.direction, direction):
                 new_head = Position(self._head.x + direction.value[0], self._head.y + direction.value[1])
                 if new_head not in self.body:
                     self.body.insert(0, new_head)
@@ -220,8 +225,7 @@ class SnakeGame(object):
                     tail = self.body.pop()
                     self.__trace.append(tail)
                 else:
-                    self._alive = False
-            return self._alive
+                    raise ValueError("Snake bite itself")
 
         def _grow(self):
             """
